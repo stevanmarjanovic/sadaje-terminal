@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SadaJeTerminal": {
+      "commandName": "Project",
+      "commandLineArgs": "--color=red"
+    }
+  }
+}
