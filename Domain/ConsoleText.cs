@@ -11,8 +11,13 @@ public class ConsoleText(string text)
 
     public string Render()
     {
-        var output = Color.EscapeSequance + Text + Color.ResetSequence;
+        var output = Color.EscapeSequence + Text + Color.ResetSequence;
 
         return output;
+    }
+
+    public override string ToString()
+    {
+        return Render();
     }
 }

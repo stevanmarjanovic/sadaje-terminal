@@ -15,19 +15,28 @@ public enum AnsiColorCodes
 
 public class AnsiColor
 {
+    public AnsiColor() { }
+
+    public AnsiColor(AnsiColorCodes colorCode)
+    {
+        ColorCode = colorCode;
+    }
+    
     public AnsiColorCodes ColorCode { get; init; } = AnsiColorCodes.Default;
-    public bool IsBackground { get; init; } = false;
-    public bool IsBright { get; init; } = true;
-    public bool IsDefault => ColorCode == AnsiColorCodes.Default;
+    public bool IsBackground { get; set; } = false;
+    public bool IsBright { get; set; } = true;
+    private bool IsDefault => ColorCode == AnsiColorCodes.Default;
 
-    public string Foreground => $"3{(int)ColorCode}";
-    public string Background => $"4{(int)ColorCode}";
-    public string ForegroundBright => IsDefault ? Foreground : $"9{(int)ColorCode}";
-    public string BackgroundBright => IsDefault ? Background : $"10{(int)ColorCode}";
+    private string Foreground => $"3{(int)ColorCode}";
+    private string Background => $"4{(int)ColorCode}";
+    private string ForegroundBright => IsDefault ? Foreground : $"9{(int)ColorCode}";
+    private string BackgroundBright => IsDefault ? Background : $"10{(int)ColorCode}";
+    private string MutedBright = "98";
+    private string Muted = "37";
 
-    private static string WrapSequence(string sequence) => $"\x1b[{sequence}m";
+    private static string WrapSequence(string sequence) => $"\e[{sequence}m";
 
-    public string EscapeSequance => (IsBackground, IsBright) switch
+    public string EscapeSequence => (IsBackground, IsBright) switch
     {
         (true,  true)  => WrapSequence(BackgroundBright),
         (true,  false) => WrapSequence(Background),

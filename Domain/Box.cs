@@ -10,7 +10,7 @@ public class Corner {
 
 public class Box {
     // Constants
-    public const char Vertical = '|';
+    public const char Vertical = '│';
     public const char Horizontal = '─';
     
     // Defining corners
@@ -18,7 +18,8 @@ public class Box {
     public Corner Corner => new() { Rounded = Rounded };
     
     // Lines and box width
-    public int Width => Lines.Max(line => line.RenderedWidth);
+    public int Width => ContentWidth + HorizontalMargin * 2 + 2;
+    public int ContentWidth => Lines.Max(line => line.RenderedWidth);
     public required List<ConsoleLine> Lines { get; init; }
 
     // Defining margins
@@ -26,15 +27,21 @@ public class Box {
     public int VerticalMargin => Margin;
     public int HorizontalMargin => 1 + (Margin * 2 > 0 ? Margin * 2 : 0);
 
-    public List<string> GetOutput()
+    public decimal CalculateMargin(string text)
+    {
+        var availableWidth = Width - text.Length;
+        return (decimal)availableWidth / 2;
+    }
+
+    public List<string> Render()
     {
         var output = new List<string>();
 
         // Empty line
-        var emptyLine = Vertical + new string(' ', Width + HorizontalMargin*2) + Vertical;
+        var emptyLine = Vertical + new string(' ', ContentWidth + HorizontalMargin*2) + Vertical;
 
         // Top line
-        var horizontalLine = new string(Horizontal, Width + HorizontalMargin*2);
+        var horizontalLine = new string(Horizontal, ContentWidth + 2);
         output.Add(Corner.UpperLeft + horizontalLine + Corner.UpperRight);
 
         // Top margin
@@ -44,7 +51,10 @@ public class Box {
         // Content
         foreach (var line in Lines)
         {
-            var content = new string(' ', HorizontalMargin) + line.Render() + new string(' ', HorizontalMargin + Width - line.RenderedWidth);
+            var content =
+                new string(' ', HorizontalMargin) +
+                line.Render() +
+                new string(' ', HorizontalMargin + ContentWidth - line.RenderedWidth);
             output.Add(Vertical + content + Vertical);
         }
 
@@ -56,5 +66,10 @@ public class Box {
         output.Add(Corner.LowerLeft + horizontalLine + Corner.LowerRight);
         
         return output;
+    }
+    
+    public override string ToString()
+    {
+        return string.Join(Environment.NewLine, Render());
     }
 }
