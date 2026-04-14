@@ -21,6 +21,12 @@ public class AnsiColor
     {
         ColorCode = colorCode;
     }
+    public AnsiColor(AnsiColor color)
+    {
+        ColorCode = color.ColorCode;
+        IsBackground = color.IsBackground;
+        IsBright = color.IsBright;
+    }
     
     public AnsiColorCodes ColorCode { get; init; } = AnsiColorCodes.Default;
     public bool IsBackground { get; set; } = false;
@@ -45,4 +51,17 @@ public class AnsiColor
     };
 
     public string ResetSequence => WrapSequence(IsBackground ? "49" : "39");
+
+    public string Render(string text)
+    {
+        return EscapeSequence + text + ResetSequence;
+    }
+
+    public AnsiColor Filled()
+    {
+        return new AnsiColor(this)
+        {
+            IsBackground = true
+        };
+    }
 }

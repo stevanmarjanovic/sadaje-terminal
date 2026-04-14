@@ -21,10 +21,27 @@ namespace SadaJeTerminal
                 return;
             }
 
+            #region ARGUMENTS
             var showTime = args.All(arg => arg != "--hide-time");
             var showCopyright = args.All(arg => arg != "--hide-copyright");
-            var isDark = args.Any(arg => arg == "--dark");
+            var dark = args.Any(arg => arg == "--dark");
             var debug = args.Any(arg => arg == "--debug");
+            var rounded = args.Any(arg => arg == "--rounded");
+            var filled = args.Any(arg => arg == "--filled");
+            
+            var boxMargin = 0;
+            if (args.Any(arg => arg.StartsWith("--margin=")))
+            {
+                var selectedMargin = args
+                    .Where(arg => arg.StartsWith("--margin="))
+                    .Select(arg => arg.Split("=").Last())
+                    .FirstOrDefault();
+
+                bool validMargin = int.TryParse(selectedMargin, out boxMargin);
+
+                if (!validMargin)
+                    boxMargin = 0;
+            }
 
             var colorCode = AnsiColorCodes.Default;
             if (args.Any(arg => arg.StartsWith("--color=")))
@@ -39,14 +56,17 @@ namespace SadaJeTerminal
             var color = new AnsiColor
             {
                 ColorCode = colorCode,
-                IsBright = isDark,
+                IsBright = dark,
+                IsBackground = filled
             };
             var mutedColor = new AnsiColor
             {
-                ColorCode = isDark ? AnsiColorCodes.Black : AnsiColorCodes.White,
-                IsBright = isDark,
+                ColorCode = dark ? AnsiColorCodes.Black : AnsiColorCodes.White,
+                IsBright = dark
             };
+            #endregion
 
+            #region TIME PARSING
             var now = DateTime.Now;
             var hour = now.Hour;
             var minute = now.Minute;
@@ -97,6 +117,8 @@ namespace SadaJeTerminal
                     allowedTags.Add($"C{hour + 1}");
                     break;
             }
+
+            #endregion
             
             if (debug)
                 Console.WriteLine($"WORDED: {string.Join(' ', allowedTags)}");
@@ -111,14 +133,14 @@ namespace SadaJeTerminal
                         consoleTexts.Add(
                             new ConsoleText(token.Value)
                             {
-                                Color = color,
+                                Color = filled ? color.Filled() : color,
                             }
                         );
                     else
                         consoleTexts.Add(
                             new ConsoleText(token.Value)
                             {
-                                Color = mutedColor
+                                Color = filled ? color.Filled() : mutedColor
                             }
                         );
                 }
@@ -128,18 +150,22 @@ namespace SadaJeTerminal
             var box = new Box
             {
                 Lines = consoleLines,
+                Rounded = rounded,
+                Color = color,
+                Margin = boxMargin,
+                Filled = filled
             };
             
             // Render tokens
             if (showTime)
             {
                 var timeText = now.ToString("hh:mm");
-                var margin = box.CalculateMargin(timeText);
+                var timeMargin = box.CalculateMargin(timeText);
                 
                 var time = new ConsoleText(
-                    new string(' ', (int)Math.Floor(margin)) +
+                    new string(' ', (int)Math.Floor(timeMargin)) +
                     timeText +
-                    new string(' ', (int)Math.Ceiling(margin))
+                    new string(' ', (int)Math.Ceiling(timeMargin))
                 ) { Color = mutedColor };
                 Console.WriteLine(time);
             }
@@ -150,12 +176,12 @@ namespace SadaJeTerminal
 
             if (showCopyright)
             {
-                var margin = box.CalculateMargin(Copyright);
+                var copyrightMargin = box.CalculateMargin(Copyright);
                 
                 var copyrightText = new ConsoleText(
-                    new string(' ', (int)Math.Floor(margin)) +
+                    new string(' ', (int)Math.Floor(copyrightMargin)) +
                     Copyright +
-                    new string(' ', (int)Math.Ceiling(margin))
+                    new string(' ', (int)Math.Ceiling(copyrightMargin))
                 ) { Color = mutedColor };
                 Console.WriteLine(copyrightText);
             }

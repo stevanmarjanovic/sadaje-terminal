@@ -10,12 +10,24 @@ public class Corner {
 
 public class Box {
     // Constants
-    public const char Vertical = '│';
-    public const char Horizontal = '─';
+    private const char Vertical = '│';
+    private const char Horizontal = '─';
     
     // Defining corners
     public bool Rounded { get; set; } = false;
     public Corner Corner => new() { Rounded = Rounded };
+
+    // Defining lines
+    private string HorizontalLine => new string(Horizontal, Width - 2);
+    private string TopLine => Filled ? Color.Render(new string(' ', Width)) : Color.Render(Corner.UpperLeft + HorizontalLine + Corner.UpperRight);
+    private string BottomLine => Filled ? Color.Render(new string(' ', Width)) : Color.Render(Corner.LowerLeft + HorizontalLine + Corner.LowerRight);
+    private string EmptyLine => Filled ? Color.Render(new string(' ', Width)) : Color.Render(VerticalRendered + new string(' ', Width - 2) + VerticalRendered);
+    private string HorizontalRendered => Color.Render(Horizontal.ToString());
+    private string VerticalRendered => Filled ? Color.Render(" ") : Color.Render(Vertical.ToString());
+
+    // Border color
+    public AnsiColor Color { get; set; } = new AnsiColor();
+    public bool Filled { get; set; } = false;
     
     // Lines and box width
     public int Width => ContentWidth + HorizontalMargin * 2 + 2;
@@ -27,6 +39,8 @@ public class Box {
     public int VerticalMargin => Margin;
     public int HorizontalMargin => 1 + (Margin * 2 > 0 ? Margin * 2 : 0);
 
+    private string RenderContent(string content) => Color.Render(content);
+
     public decimal CalculateMargin(string text)
     {
         var availableWidth = Width - text.Length;
@@ -37,33 +51,29 @@ public class Box {
     {
         var output = new List<string>();
 
-        // Empty line
-        var emptyLine = Vertical + new string(' ', ContentWidth + HorizontalMargin*2) + Vertical;
-
         // Top line
-        var horizontalLine = new string(Horizontal, ContentWidth + 2);
-        output.Add(Corner.UpperLeft + horizontalLine + Corner.UpperRight);
+        output.Add(TopLine);
 
         // Top margin
         for (var i = 0; i < VerticalMargin; i++)
-            output.Add(emptyLine);
+            output.Add(EmptyLine);
 
         // Content
         foreach (var line in Lines)
         {
             var content =
-                new string(' ', HorizontalMargin) +
+                RenderContent(new string(' ', HorizontalMargin)) +
                 line.Render() +
-                new string(' ', HorizontalMargin + ContentWidth - line.RenderedWidth);
-            output.Add(Vertical + content + Vertical);
+                RenderContent(new string(' ', HorizontalMargin + ContentWidth - line.RenderedWidth));
+            output.Add(VerticalRendered + content + VerticalRendered);
         }
 
         // Bottom margin
         for (var i = 0; i < VerticalMargin; i++)
-            output.Add(emptyLine);
+            output.Add(EmptyLine);
 
         // Bottom line
-        output.Add(Corner.LowerLeft + horizontalLine + Corner.LowerRight);
+        output.Add(BottomLine);
         
         return output;
     }
