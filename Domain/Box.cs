@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace SadaJeTerminal.Domain;
 
 public class Corner {
@@ -18,28 +22,26 @@ public class Box {
     public Corner Corner => new() { Rounded = Rounded };
 
     // Defining lines
-    private string HorizontalLine => new string(Horizontal, Width - 2);
-    private string TopLine => Filled ? Color.Render(new string(' ', Width)) : Color.Render(Corner.UpperLeft + HorizontalLine + Corner.UpperRight);
-    private string BottomLine => Filled ? Color.Render(new string(' ', Width)) : Color.Render(Corner.LowerLeft + HorizontalLine + Corner.LowerRight);
-    private string EmptyLine => Filled ? Color.Render(new string(' ', Width)) : Color.Render(VerticalRendered + new string(' ', Width - 2) + VerticalRendered);
-    private string HorizontalRendered => Color.Render(Horizontal.ToString());
-    private string VerticalRendered => Filled ? Color.Render(" ") : Color.Render(Vertical.ToString());
+    private string HorizontalContentLine => new string(Horizontal, Width - 2);
+    private string TopLine => Color.RenderForeground(Corner.UpperLeft + HorizontalContentLine + Corner.UpperRight);
+    private string BottomLine => Color.RenderForeground(Corner.LowerLeft + HorizontalContentLine + Corner.LowerRight);
+    private string EmptyLine => Color.RenderForeground(VerticalRendered + new string(' ', Width - 2) + VerticalRendered);
+    private string HorizontalRendered => Color.RenderForeground(Horizontal.ToString());
+    private string VerticalRendered => Color.RenderForeground(Vertical.ToString());
 
     // Border color
-    public AnsiColor Color { get; set; } = new AnsiColor();
-    public bool Filled { get; set; } = false;
+    public AnsiColor Color { get; init; } = new();
     
     // Lines and box width
-    public int Width => ContentWidth + HorizontalMargin * 2 + 2;
-    public int ContentWidth => Lines.Max(line => line.RenderedWidth);
-    public required List<ConsoleLine> Lines { get; init; }
+    private int Width => ContentWidth + HorizontalMargin * 2 + 2;
+    private int ContentWidth => Content.Max(line => line.Sum(token => token.Value.Length * 2 - 1) + line.Count - 1);
+    public required List<List<Token>> Content { get; init; }
 
     // Defining margins
-    public int Margin { get; set; } = 0;
-    public int VerticalMargin => Margin;
-    public int HorizontalMargin => 1 + (Margin * 2 > 0 ? Margin * 2 : 0);
-
-    private string RenderContent(string content) => Color.Render(content);
+    public int Margin { get; init; }
+    private int VerticalMargin => Margin;
+    private int HorizontalMargin => 1 + (Margin * 2 > 0 ? Margin * 2 : 0);
+    private string HorizontalMarginRendered => new(' ', HorizontalMargin);
 
     public decimal CalculateMargin(string text)
     {
@@ -49,25 +51,26 @@ public class Box {
 
     public List<string> Render()
     {
-        var output = new List<string>();
-
-        // Top line
-        output.Add(TopLine);
+        List<string> output = [ TopLine ]; // Top line
 
         // Top margin
         for (var i = 0; i < VerticalMargin; i++)
             output.Add(EmptyLine);
 
         // Content
-        foreach (var line in Lines)
+        foreach (var line in Content)
         {
-            var content =
-                RenderContent(new string(' ', HorizontalMargin)) +
-                line.Render() +
-                RenderContent(new string(' ', HorizontalMargin + ContentWidth - line.RenderedWidth));
-            output.Add(VerticalRendered + content + VerticalRendered);
+            var content = new List<string>();
+            foreach (var token in line)
+            {
+                var tokenText = string.Join(" ", token.Value.ToCharArray());
+                var coloredTextAccent = Color.RenderForeground(tokenText);
+                var coloredTextMuted = Color.RenderForegroundMuted(tokenText);
+                content.Add(token.Accent ? coloredTextAccent : coloredTextMuted);
+            }
+            output.Add(VerticalRendered + HorizontalMarginRendered + string.Join(" ", content) + HorizontalMarginRendered + VerticalRendered);
         }
-
+        
         // Bottom margin
         for (var i = 0; i < VerticalMargin; i++)
             output.Add(EmptyLine);

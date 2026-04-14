@@ -37,31 +37,28 @@ public class AnsiColor
     private string Background => $"4{(int)ColorCode}";
     private string ForegroundBright => IsDefault ? Foreground : $"9{(int)ColorCode}";
     private string BackgroundBright => IsDefault ? Background : $"10{(int)ColorCode}";
-    private string MutedBright = "98";
-    private string Muted = "37";
 
     private static string WrapSequence(string sequence) => $"\e[{sequence}m";
 
-    public string EscapeSequence => (IsBackground, IsBright) switch
-    {
-        (true,  true)  => WrapSequence(BackgroundBright),
-        (true,  false) => WrapSequence(Background),
-        (false, true)  => WrapSequence(ForegroundBright),
-        (false, false) => WrapSequence(Foreground)
-    };
+    private string EscapeForegroundSequence => IsBright ? WrapSequence(ForegroundBright) : WrapSequence(Foreground);
+    private string EscapeForegroundMutedSequence => IsBright ? WrapSequence("90") : WrapSequence("37");
+    
+    private string EscapeBackgroundSequence => IsBright ? WrapSequence(BackgroundBright) : WrapSequence(Background);
+    private string ResetForegroundSequence => WrapSequence("39");
+    private string ResetBackgroundSequence => WrapSequence("49");
 
-    public string ResetSequence => WrapSequence(IsBackground ? "49" : "39");
-
-    public string Render(string text)
+    public string RenderForeground(string text)
     {
-        return EscapeSequence + text + ResetSequence;
+        return EscapeForegroundSequence + text + ResetForegroundSequence;
     }
 
-    public AnsiColor Filled()
+    public string RenderForegroundMuted(string text)
     {
-        return new AnsiColor(this)
-        {
-            IsBackground = true
-        };
+        return EscapeForegroundMutedSequence + text + ResetForegroundSequence;
+    }
+
+    public string RenderBackground(string text)
+    {
+        return EscapeBackgroundSequence + text + ResetBackgroundSequence;
     }
 }

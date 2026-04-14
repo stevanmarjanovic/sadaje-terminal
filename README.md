@@ -21,4 +21,51 @@ sadaje [options]
 
 ## Build
 
-TO DO
+This app was designed to be built as a Native AOT. All the scripts below were made for ease of publishing, but they
+essentially just run one script.
+
+```shell
+dotnet publish ./SadaJeTerminal.csproj -c Release -r <RID>
+```
+
+### Runtime Identifiers
+
+| OS          | Architecture | RID           |
+|-------------|--------------|---------------|
+| **macOS**   | ARM          | `osx-arm64`   |
+|             | x64          | `osx-x64`     |
+| **Linux**   | ARM          | `linux-arm64` |
+|             | x64          | `linux-x64`   |
+| **Windows** | ARM          | `win-arm64`   |
+|             | x64          | `win-x64`     |
+
+
+### MacOS
+
+This creates both `arm64` and `x64` binaries for macOS in the `./dist` folder.
+
+```shell
+./publish-osx.sh
+```
+
+### Windows
+
+This creates both `arm64` and `x64` binaries for Windows in the `./dist` folder.
+
+#### Command Line
+```shell
+publish.bat
+```
+
+#### PowerShell
+```shell
+./publish.ps1
+```
+
+### Linux
+
+This creates both `arm64` and `x64` binaries for Linux-based operating systems in the `./dist` folder.
+
+```shell
+./publish-linux.sh
+```

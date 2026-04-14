@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using SadaJeTerminal.Domain;
 
 namespace SadaJeTerminal.Data;

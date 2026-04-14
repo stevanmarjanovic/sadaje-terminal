@@ -1,4 +1,7 @@
-﻿using SadaJeTerminal.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using SadaJeTerminal.Data;
 using SadaJeTerminal.Domain;
 
 namespace SadaJeTerminal
@@ -14,21 +17,25 @@ namespace SadaJeTerminal
             {
                 Console.WriteLine("Usage: sadaje [options]");
                 Console.WriteLine("Options:");
+                Console.WriteLine("  --dark              Set dark mode");
+                Console.WriteLine("  --rounded           Make box corners rounded");
+                Console.WriteLine("  --color=<color>     Set the color of the text (black, blue, green, cyan, red, magenta, yellow, white)");
+                Console.WriteLine("  --margin=<margin>   Set margin between border and content (this is padding actually)");
                 Console.WriteLine("  --hide-time         Hide the current time");
                 Console.WriteLine("  --hide-copyright    Hide the copyright notice");
+                Console.WriteLine("  --debug             Show some debug data");
                 Console.WriteLine("  --help              Show this help message");
-                Console.WriteLine("  --color=<color>     Set the color of the text (black, blue, green, cyan, red, magenta, yellow, white)");
                 return;
             }
 
             #region ARGUMENTS
+
             var showTime = args.All(arg => arg != "--hide-time");
             var showCopyright = args.All(arg => arg != "--hide-copyright");
             var dark = args.Any(arg => arg == "--dark");
             var debug = args.Any(arg => arg == "--debug");
             var rounded = args.Any(arg => arg == "--rounded");
-            var filled = args.Any(arg => arg == "--filled");
-            
+
             var boxMargin = 0;
             if (args.Any(arg => arg.StartsWith("--margin=")))
             {
@@ -50,23 +57,25 @@ namespace SadaJeTerminal
                     .Where(arg => arg.StartsWith("--color="))
                     .Select(arg => arg.Split("=").Last())
                     .FirstOrDefault();
-                
+
                 Enum.TryParse(selectedColor, true, out colorCode);
             }
+
             var color = new AnsiColor
             {
                 ColorCode = colorCode,
                 IsBright = dark,
-                IsBackground = filled
             };
             var mutedColor = new AnsiColor
             {
                 ColorCode = dark ? AnsiColorCodes.Black : AnsiColorCodes.White,
                 IsBright = dark
             };
+
             #endregion
 
             #region TIME PARSING
+
             var now = DateTime.Now;
             var hour = now.Hour;
             var minute = now.Minute;
@@ -80,11 +89,11 @@ namespace SadaJeTerminal
 
             // Convert to 12-hour format
             hour = hour > 12 ? hour - 12 : hour;
-            
+
             if (debug)
                 Console.WriteLine($"ROUNDED: {hour} {minute}");
 
-            List<string> allowedTags = [ "NOW" ];
+            List<string> allowedTags = ["NOW"];
 
             switch (minute)
             {
@@ -119,41 +128,24 @@ namespace SadaJeTerminal
             }
 
             #endregion
-            
+
             if (debug)
                 Console.WriteLine($"WORDED: {string.Join(' ', allowedTags)}");
-                
-            var consoleLines = new List<ConsoleLine>();
-            foreach (var line in Tokens)
+
+            foreach (var tokenList in Tokens)
             {
-                var consoleTexts = new List<ConsoleText>();
-                foreach (var token in line)
+                foreach (var token in tokenList)
                 {
-                    if (token.Tags.Any(allowedTags.Contains))
-                        consoleTexts.Add(
-                            new ConsoleText(token.Value)
-                            {
-                                Color = filled ? color.Filled() : color,
-                            }
-                        );
-                    else
-                        consoleTexts.Add(
-                            new ConsoleText(token.Value)
-                            {
-                                Color = filled ? color.Filled() : mutedColor
-                            }
-                        );
+                    token.Accent = token.Tags.Any(allowedTags.Contains);
                 }
-                consoleLines.Add(new ConsoleLine(consoleTexts));
             }
 
             var box = new Box
             {
-                Lines = consoleLines,
+                Content = Tokens,
                 Rounded = rounded,
                 Color = color,
                 Margin = boxMargin,
-                Filled = filled
             };
             
             // Render tokens
@@ -161,13 +153,11 @@ namespace SadaJeTerminal
             {
                 var timeText = now.ToString("hh:mm");
                 var timeMargin = box.CalculateMargin(timeText);
-                
-                var time = new ConsoleText(
-                    new string(' ', (int)Math.Floor(timeMargin)) +
-                    timeText +
-                    new string(' ', (int)Math.Ceiling(timeMargin))
-                ) { Color = mutedColor };
-                Console.WriteLine(time);
+
+                var time = new string(' ', (int)Math.Floor(timeMargin)) + 
+                           timeText + 
+                           new string(' ', (int)Math.Ceiling(timeMargin));
+                Console.WriteLine(color.RenderForegroundMuted(time));
             }
 
             var outputLines = box.Render();
@@ -177,13 +167,11 @@ namespace SadaJeTerminal
             if (showCopyright)
             {
                 var copyrightMargin = box.CalculateMargin(Copyright);
-                
-                var copyrightText = new ConsoleText(
-                    new string(' ', (int)Math.Floor(copyrightMargin)) +
-                    Copyright +
-                    new string(' ', (int)Math.Ceiling(copyrightMargin))
-                ) { Color = mutedColor };
-                Console.WriteLine(copyrightText);
+
+                var copyrightText = new string(' ', (int)Math.Floor(copyrightMargin)) +
+                                    Copyright +
+                                    new string(' ', (int)Math.Ceiling(copyrightMargin));
+                Console.WriteLine(color.RenderForegroundMuted(copyrightText));
             }
         }
     }
