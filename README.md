@@ -10,14 +10,17 @@ Text-based 5-minute-step clock in Serbian for terminal use.
 sadaje [options]
 ```
 
-|Option            |Description|
-|-----------------|-----------|
-|`--hide-time`      |**Hide the current time** |
-|`--hide-copyright` |**Hide the copyright notice** |
-|`--help`           |**Show this help message** |
-|`--debug`          |**Show debug data** |
-|`--dark`           |**Set datk mode** IN DEVELOPMENT|
-|`--color=<color>`  |**Set the color of the text**<br>black, blue, green, cyan, red, magenta, yellow, white |
+|Option              | Description                                                                                |
+|--------------------|--------------------------------------------------------------------------------------------|
+|`--dark`            | **Set dark mode**                                                                          |
+|`--rounded`         | **Make box corners rounded**                                                               |
+|`--color=<color>`   | **Set the color of the text**<br>black, blue, green, cyan, red, magenta, yellow, white     |
+|`--margin=<margin>` | **Set margin between border and content**<br>This is called padding actually. Use integers |
+|`--hide-time`       | **Hide the current time**                                                                  |
+|`--hide-copyright`  | **Hide the copyright notice**                                                              |
+|`--debug`           | **Show some debug data**                                                                   |
+|`--help`            | **Show this help message**                                                                 |
+
 
 ## Build
 
